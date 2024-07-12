@@ -1,9 +1,35 @@
 package org.example
 
+private class TransactionData{
+    val modified: Map<String, String>
+        field = mutableMapOf()
+
+    val removed: Set<String>
+        field = mutableSetOf()
+
+    fun isNotEmpty(): Boolean = modified.isNotEmpty() || removed.isNotEmpty()
+
+    fun set(key: String, value: String) {
+        modified[key] = value
+        removed -= key
+    }
+
+    fun delete(key: String) {
+        modified.remove(key)
+        removed += key
+    }
+
+    fun merge(other: TransactionData) {
+        modified += other.modified
+        removed -= other.modified.keys
+        removed += other.removed
+    }
+}
+
 class Storage {
 
     // transactionStack[0] is the root transaction which is impossible to commit or rollback
-    private val transactionStack = mutableListOf(mutableMapOf<String, String>())
+    private val transactionStack = mutableListOf(TransactionData())
 
     // merged data from all transactions in the transactionStack
     private val cache = mutableMapOf<String, String>()
@@ -22,16 +48,22 @@ class Storage {
 
     operator fun set(key: String, value: String) {
         isCacheValid = false
-        transactionStack.last().put(key, value)
+        transactionStack.last().set(key, value)
     }
 
     fun delete(key: String): String? {
-        isCacheValid = false
-        return transactionStack.last().remove(key)
+        val value = get(key)
+
+        if (value != null) {
+            transactionStack.last().delete(key)
+            isCacheValid = false
+        }
+
+        return value
     }
 
     fun beginTransaction(): Int {
-        transactionStack += mutableMapOf()
+        transactionStack += TransactionData()
         return transactionStack.size - 1
     }
 
@@ -41,7 +73,11 @@ class Storage {
             error("no transaction")
         }
 
-        transactionStack[transactionStack.size - 2] += transactionStack[transactionStack.size - 1]
+        val parent = transactionStack[transactionStack.size - 2]
+        val current = transactionStack[transactionStack.size - 1]
+
+        parent.merge(current)
+
         transactionStack.removeLast()
 
         return transactionStack.size - 1
@@ -53,8 +89,11 @@ class Storage {
             error("no transaction")
         }
 
-        transactionStack.removeLast()
-        isCacheValid = false
+        val transaction = transactionStack.removeLast()
+
+        if (transaction.isNotEmpty()) {
+            isCacheValid = false
+        }
 
         return transactionStack.size - 1
     }
@@ -65,7 +104,11 @@ class Storage {
         }
 
         cache.clear()
-        transactionStack.forEach { cache += it }
+
+        transactionStack.forEach { transaction ->
+            cache += transaction.modified
+            cache -= transaction.removed
+        }
 
         isCacheValid = true
     }

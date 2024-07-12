@@ -20,6 +20,10 @@ tasks.test {
 
 kotlin {
     jvmToolchain(17)
+
+    sourceSets.all {
+        languageSettings.enableLanguageFeature("ExplicitBackingFields")
+    }
 }
 
 application {

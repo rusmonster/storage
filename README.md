@@ -10,6 +10,14 @@ An interactive interface to a transactional key value store.
 
 Type `HELP` to get a list of all supported commands.
 
+## Setup IDEA
+
+In order to enable new kotlin 2.0 feature ExplicitBackingFields support in IDEA:
+
+```
+Settings -> Languages & Frameworks -> Kotlin: Check the "Enable K2 Kotlin Mode"
+```
+
 ## License
 
     Copyright 2024 Dmitry Kalita.
