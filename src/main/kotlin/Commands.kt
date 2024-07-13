@@ -2,6 +2,10 @@ package org.example
 
 import org.example.storage.Storage
 
+/**
+ * Enum representing CLI commands. Easily extendable by adding new items.
+ * New commands automatically integrate with the HELP command output and are immediately functional.
+ */
 enum class Command(private val commandName: String) {
     SET("SET") {
         override val description = "SET <key> <value> - Store the value for key."
@@ -10,7 +14,7 @@ enum class Command(private val commandName: String) {
         private lateinit var value: String
 
         override fun setParams(params: List<String>) {
-            require(params.size == 2) { "${params.size} parameters found, but 2 expected: SET <key> <value> " }
+            require(params.size == 2) { "${params.size} parameters found, but 2 expected: SET <key> <value>" }
             key = params[0]
             value = params[1]
         }
@@ -118,9 +122,17 @@ enum class Command(private val commandName: String) {
         }
     };
 
+    /** Provides a description for the command, used in displaying help information. */
     abstract val description: String
-    abstract fun execute(storage: Storage): String
+
+    /** Accepts the command's parameters provided by the user through the CLI. */
     protected open fun setParams(params: List<String>) {}
+
+    /**
+     * Executes the command on the provided storage.
+     * Returns a message for display on the CLI stdout after execution.
+     */
+    abstract fun execute(storage: Storage): String
 
     companion object {
         private val allCommands = Command.entries.associateBy { it.name }

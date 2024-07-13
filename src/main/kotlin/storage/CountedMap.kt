@@ -1,5 +1,9 @@
 package org.example.storage
 
+/**
+ * A generic, mutable map that counts the occurrences of each value.
+ * It allows for efficient tracking of value frequencies alongside regular map operations.
+ */
 class CountedMap<K, V> {
 
     private val data = mutableMapOf<K, V>()

@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 
 class ConcurrentStorageTest {
 
-    lateinit var storage: Storage
+    private lateinit var storage: Storage
 
     @BeforeTest
     fun setUp() {

@@ -3,6 +3,21 @@ package org.example.storage
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
 
+/**
+ * Returns a thread-safe decorator for a given [Storage] instance.
+ *
+ * Thread safety was not in explicit requirements.
+ * So this is a trivial thread-safety solution created just for fun.
+ *
+ * It uses a [ReentrantReadWriteLock] to synchronize access to the underlying storage.
+ * So works in JVM only.
+ *
+ * It's possible to build better thread-safe implementation where locking on read operations
+ * could be avoided in most cases. But it would require more complex synchronization logic
+ * and more space complexity.
+ *
+ * Covered by tests in [ConcurrentStorageTest].
+ */
 fun Storage.Companion.synchronizedStorage(storage: Storage): Storage = ConcurrentStorage(storage)
 
 private class ConcurrentStorage(private val storage: Storage) : Storage {

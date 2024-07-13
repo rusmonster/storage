@@ -1,5 +1,11 @@
 package org.example.storage
 
+/**
+ * A factory method to create new instances of [Storage].
+ * Implementation returned by this factory method is not thread-safe.
+ *
+ * Use the [synchronizedStorage] method to get a thread-safe instance of [Storage].
+ */
 fun Storage.Companion.newStorage(): Storage = StorageImpl()
 
 private typealias TransactionLog = MutableList<RevertAction>
@@ -13,6 +19,10 @@ private class StorageImpl : Storage {
 
     private val data = CountedMap<String, String>()
 
+    /**
+     * Each entry in this list corresponds to a transaction log for a
+     * single transaction level within the nested transaction hierarchy.
+     */
     private val transactionLogs = mutableListOf<TransactionLog>()
 
     override fun count(value: String): Int = data.count(value)
@@ -53,6 +63,10 @@ private class StorageImpl : Storage {
         val transactionLog = transactionLogs.removeLast()
 
         if (transactionLogs.isNotEmpty()) {
+            // TODO:
+            // This has O(n) complexity, where n is the number of actions in the commited transaction log.
+            // It can be optimized to O(1) by implementing a custom TransactionLog
+            // based on a linked list.
             transactionLogs.last() += transactionLog
         }
 
@@ -73,7 +87,6 @@ private class StorageImpl : Storage {
             }
         }
 
-        val size = transactionLogs.size
-        return size
+        return transactionLogs.size
     }
 }

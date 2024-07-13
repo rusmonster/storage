@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 
 class StorageTest {
 
-    lateinit var storage: Storage
+    private lateinit var storage: Storage
 
     @BeforeTest
     fun setUp() {
