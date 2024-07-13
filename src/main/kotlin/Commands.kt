@@ -1,5 +1,7 @@
 package org.example
 
+import org.example.storage.Storage
+
 enum class Command(private val commandName: String) {
     SET("SET") {
         override val description = "SET <key> <value> - Store the value for key."

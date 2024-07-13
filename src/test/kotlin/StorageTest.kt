@@ -1,4 +1,4 @@
-import org.example.Storage
+import org.example.storage.Storage
 import kotlin.concurrent.thread
 import kotlin.test.BeforeTest
 import kotlin.test.Test
