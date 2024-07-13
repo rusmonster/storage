@@ -99,4 +99,75 @@ class StorageTest {
         storage.rollbackTransaction()
         assertEquals("123", storage["foo"])
     }
+
+    @Test
+    fun rollbackRootTransactionSet() {
+        storage["foo"] = "123"
+        assertEquals("123", storage["foo"])
+
+        storage.beginTransaction()
+        assertEquals("123", storage["foo"])
+
+        storage["foo"] = "456"
+        assertEquals("456", storage["foo"])
+
+        storage.beginTransaction()
+        assertEquals("456", storage["foo"])
+
+        storage["foo"] = "789"
+        assertEquals("789", storage["foo"])
+
+        storage.commitTransaction()
+        assertEquals("789", storage["foo"])
+
+        storage.rollbackTransaction()
+        assertEquals("123", storage["foo"])
+    }
+
+    @Test
+    fun rollbackRootTransactionDelete() {
+        storage["foo"] = "123"
+        assertEquals("123", storage["foo"])
+
+        storage.beginTransaction()
+        assertEquals("123", storage["foo"])
+
+        storage.delete("foo")
+        assertNull(storage["foo"])
+
+        storage.beginTransaction()
+        assertNull(storage["foo"])
+
+        storage["foo"] = "456"
+        assertEquals("456", storage["foo"])
+
+        storage.commitTransaction()
+        assertEquals("456", storage["foo"])
+
+        storage.rollbackTransaction()
+        assertEquals("123", storage["foo"])
+    }
+
+    @Test
+    fun rollbackRootTransactionToNull() {
+        assertNull(storage["foo"])
+
+        storage.beginTransaction()
+        assertNull(storage["foo"])
+
+        storage["foo"] = "123"
+        assertEquals("123", storage["foo"])
+
+        storage.beginTransaction()
+        assertEquals("123", storage["foo"])
+
+        storage.delete("foo")
+        assertNull(storage["foo"])
+
+        storage.rollbackTransaction()
+        assertEquals("123", storage["foo"])
+
+        storage.rollbackTransaction()
+        assertNull(storage["foo"])
+    }
 }
