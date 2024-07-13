@@ -19,9 +19,9 @@ enum class Command(private val commandName: String) {
             value = params[1]
         }
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             storage[key] = value
-            return ""
+            return null
         }
     },
 
@@ -35,7 +35,7 @@ enum class Command(private val commandName: String) {
             key = params[0]
         }
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             return storage[key] ?: "key not set"
         }
     },
@@ -50,7 +50,7 @@ enum class Command(private val commandName: String) {
             key = params[0]
         }
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             val value = storage.delete(key)
             return if (value == null) {
                 "The key '$key' is not found in the storage"
@@ -70,7 +70,7 @@ enum class Command(private val commandName: String) {
             value = params[0]
         }
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             val count = storage.count(value)
             return count.toString()
         }
@@ -79,34 +79,34 @@ enum class Command(private val commandName: String) {
     BEGIN("BEGIN") {
         override val description = "BEGIN - Start a new transaction."
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             val transactionCount = storage.beginTransaction()
-            return "Transaction started. In total $transactionCount transaction(s) are opened"
+            return "Transaction started. In total $transactionCount transaction(s) are opened."
         }
     },
 
     COMMIT("COMMIT") {
         override val description = "COMMIT - Complete the current transaction."
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             val transactionCount = storage.commitTransaction()
-            return "Transaction commited. In total $transactionCount transaction(s) are opened"
+            return "Transaction commited. In total $transactionCount transaction(s) are opened."
         }
     },
 
     ROLLBACK("ROLLBACK") {
         override val description = "ROLLBACK - Revert to state prior to BEGIN call."
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             val transactionCount = storage.rollbackTransaction()
-            return "Transaction reverted. In total $transactionCount transaction(s) are opened"
+            return "Transaction reverted. In total $transactionCount transaction(s) are opened."
         }
     },
 
     HELP("HELP") {
         override val description = "HELP - Print all available commands."
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             return buildString {
                 appendLine("Supported commands:")
                 Command.entries.forEach { appendLine(it.description) }
@@ -117,7 +117,7 @@ enum class Command(private val commandName: String) {
     EXIT("EXIT") {
         override val description = "EXIT - Say BYE! and exit. All data in the storage will be lost."
 
-        override fun execute(storage: Storage): String {
+        override fun execute(storage: Storage): String? {
             return "BYE!"
         }
     };
@@ -130,9 +130,9 @@ enum class Command(private val commandName: String) {
 
     /**
      * Executes the command on the provided storage.
-     * Returns a message for display on the CLI stdout after execution.
+     * Returns a message for display on the CLI stdout after execution or null if no message is needed.
      */
-    abstract fun execute(storage: Storage): String
+    abstract fun execute(storage: Storage): String?
 
     companion object {
         private val allCommands = Command.entries.associateBy { it.name }

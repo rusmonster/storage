@@ -1,12 +1,12 @@
-Transaction started. In total 1 transaction(s) are opened
-Transaction started. In total 2 transaction(s) are opened
+Transaction started. In total 1 transaction(s) are opened.
+Transaction started. In total 2 transaction(s) are opened.
 2
 456
 789
-Transaction reverted. In total 1 transaction(s) are opened
+Transaction reverted. In total 1 transaction(s) are opened.
 456
 The key 'foo' with value '456' has been removed
 key not set
-Transaction reverted. In total 0 transaction(s) are opened
+Transaction reverted. In total 0 transaction(s) are opened.
 123
 BYE!

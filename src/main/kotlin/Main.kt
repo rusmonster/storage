@@ -22,7 +22,7 @@ fun main() {
         try {
             command = Command.getInstance(params)
             val output = command.execute(storage)
-            println(output)
+            output?.let { println(it) }
         } catch (e: Exception) {
             println(e.message)
         }

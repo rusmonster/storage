@@ -11,7 +11,7 @@ function run_test() {
 	EXPECTED_OUTPUT="$TESTS_DATA_DIR/$TEST_NAME/output.txt"
 	ACTUAL_OUTPUT="$TESTS_DATA_DIR/$TEST_NAME/output-actual.txt"
 
-	./gradlew run -q --console=plain < "$INPUT" | grep '^> *' | sed 's/> //' | grep -v '^[[:space:]]*$' > "$ACTUAL_OUTPUT"
+	./gradlew run -q --console=plain < "$INPUT" | grep '^> *' | sed 's/^\(> \)*//' | grep -v '^[[:space:]]*$' > "$ACTUAL_OUTPUT"
 
 	if cmp -s "$EXPECTED_OUTPUT" "$ACTUAL_OUTPUT"; then
 		echo "$TEST_NAME: PASSED"

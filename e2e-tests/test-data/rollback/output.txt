@@ -1,7 +1,7 @@
-Transaction started. In total 1 transaction(s) are opened
+Transaction started. In total 1 transaction(s) are opened.
 456
 def
-Transaction reverted. In total 0 transaction(s) are opened
+Transaction reverted. In total 0 transaction(s) are opened.
 123
 abc
 no transaction
