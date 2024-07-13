@@ -43,14 +43,6 @@ BYE!
 In case where the test fails actual output can be found in the same 
 folder: `./e2e-tests/test-data/set-get/output-actual.txt`
 
-## Setup IDEA
-
-In order to enable new kotlin 2.0 feature ExplicitBackingFields support in IDEA:
-
-```
-Settings -> Languages & Frameworks -> Kotlin: Check the "Enable K2 Kotlin Mode"
-```
-
 ## License
 
     Copyright 2024 Dmitry Kalita.
