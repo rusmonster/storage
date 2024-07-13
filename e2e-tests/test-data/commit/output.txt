@@ -1,0 +1,9 @@
+123
+Transaction started. In total 1 transaction(s) are opened
+123
+The key 'bar' with value '123' has been removed
+Transaction commited. In total 0 transaction(s) are opened
+key not set
+no transaction
+456
+BYE!

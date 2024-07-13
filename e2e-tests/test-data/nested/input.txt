@@ -1,0 +1,16 @@
+SET foo 123
+SET bar 456
+BEGIN
+SET foo 456
+BEGIN
+COUNT 456
+GET foo
+SET foo 789
+GET foo
+ROLLBACK
+GET foo
+DELETE foo
+GET foo
+ROLLBACK
+GET foo
+exit

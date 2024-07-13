@@ -1,0 +1,12 @@
+SET foo 123
+SET bar abc
+BEGIN
+SET foo 456
+GET foo
+SET bar def
+GET bar
+ROLLBACK
+GET foo
+GET bar
+COMMIT
+exit

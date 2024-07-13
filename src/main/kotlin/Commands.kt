@@ -47,9 +47,9 @@ enum class Command(private val commandName: String) {
         override fun execute(storage: Storage): String {
             val value = storage.delete(key)
             return if (value == null) {
-                "The key '$key' is not found in the storage."
+                "The key '$key' is not found in the storage"
             } else {
-                "The key '$key' with value '$value' has been removed."
+                "The key '$key' with value '$value' has been removed"
             }
         }
     },

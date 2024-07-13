@@ -1,0 +1,3 @@
+The key 'foo' is not found in the storage
+key not set
+BYE!

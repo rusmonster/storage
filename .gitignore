@@ -1,3 +1,4 @@
 .gradle
 .idea/
 build/
+e2e-tests/test-data/*/output-actual.txt

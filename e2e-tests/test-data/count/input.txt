@@ -1,0 +1,6 @@
+SET foo 123
+SET bar 456
+SET baz 123
+COUNT 123
+COUNT 456
+exit
