@@ -10,6 +10,12 @@ An interactive interface to a transactional key value store.
 
 Type `HELP` to get a list of all supported commands.
 
+## Run junit tests
+
+```
+./gradlew clean test
+```
+
 ## Setup IDEA
 
 In order to enable new kotlin 2.0 feature ExplicitBackingFields support in IDEA:

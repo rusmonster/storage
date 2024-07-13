@@ -13,8 +13,9 @@ enum class Command(private val commandName: String) {
             value = params[1]
         }
 
-        override fun execute(storage: Storage) {
+        override fun execute(storage: Storage): String {
             storage[key] = value
+            return ""
         }
     },
 
@@ -28,9 +29,8 @@ enum class Command(private val commandName: String) {
             key = params[0]
         }
 
-        override fun execute(storage: Storage) {
-            val value = storage[key]
-            println(value ?: "key not set")
+        override fun execute(storage: Storage): String {
+            return storage[key] ?: "key not set"
         }
     },
 
@@ -44,12 +44,12 @@ enum class Command(private val commandName: String) {
             key = params[0]
         }
 
-        override fun execute(storage: Storage) {
+        override fun execute(storage: Storage): String {
             val value = storage.delete(key)
-            if (value == null) {
-                println("The key '$key' is not found in the storage.")
+            return if (value == null) {
+                "The key '$key' is not found in the storage."
             } else {
-                println("The key '$key' with value '$value' has been removed.")
+                "The key '$key' with value '$value' has been removed."
             }
         }
     },
@@ -64,58 +64,60 @@ enum class Command(private val commandName: String) {
             value = params[0]
         }
 
-        override fun execute(storage: Storage) {
+        override fun execute(storage: Storage): String {
             val count = storage.count(value)
-            println(count)
+            return count.toString()
         }
     },
 
     BEGIN("BEGIN") {
         override val description = "BEGIN - Start a new transaction."
 
-        override fun execute(storage: Storage) {
-            storage.beginTransaction()
+        override fun execute(storage: Storage): String {
+            val transactionCount = storage.beginTransaction()
+            return "Transaction started. In total $transactionCount transaction(s) are opened"
         }
     },
 
     COMMIT("COMMIT") {
         override val description = "COMMIT - Complete the current transaction."
 
-        override fun execute(storage: Storage) {
+        override fun execute(storage: Storage): String {
             val transactionCount = storage.commitTransaction()
-            println("Transaction commited successfully. $transactionCount transaction(s) are pending")
+            return "Transaction commited. In total $transactionCount transaction(s) are opened"
         }
     },
 
     ROLLBACK("ROLLBACK") {
         override val description = "ROLLBACK - Revert to state prior to BEGIN call."
 
-        override fun execute(storage: Storage) {
+        override fun execute(storage: Storage): String {
             val transactionCount = storage.rollbackTransaction()
-            println("Transaction reverted successfully. $transactionCount transaction(s) are pending")
+            return "Transaction reverted. In total $transactionCount transaction(s) are opened"
         }
     },
 
     HELP("HELP") {
         override val description = "HELP - Print all available commands."
 
-        override fun execute(storage: Storage) {
-            Command.entries.forEach { command ->
-                println(command.description)
-            }
+        override fun execute(storage: Storage): String {
+            return buildString {
+                appendLine("Supported commands:")
+                Command.entries.forEach { appendLine(it.description) }
+            }.trimEnd()
         }
     },
 
     EXIT("EXIT") {
         override val description = "EXIT - Say BYE! and exit. All data in the storage will be lost."
 
-        override fun execute(storage: Storage) {
-            println("BYE!")
+        override fun execute(storage: Storage): String {
+            return "BYE!"
         }
     };
 
     abstract val description: String
-    abstract fun execute(storage: Storage)
+    abstract fun execute(storage: Storage): String
     protected open fun setParams(params: List<String>) {}
 
     companion object {
@@ -126,7 +128,7 @@ enum class Command(private val commandName: String) {
 
             val commandName = params[0].uppercase()
             val command = allCommands[commandName]
-                ?: error("Unknown command \"${params[0]}\". Type HELP to get a list of all supported commands.")
+                ?: error("Unknown command \"${params[0]}\". Type HELP to get a list of all supported commands")
 
             command.setParams(params.subList(1, params.size))
             return command

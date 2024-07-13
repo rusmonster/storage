@@ -18,7 +18,8 @@ fun main() {
 
         try {
             command = Command.getInstance(params)
-            command.execute(storage)
+            val output = command.execute(storage)
+            println(output)
         } catch (e: Exception) {
             println(e.message)
         }
