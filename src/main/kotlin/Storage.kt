@@ -1,5 +1,8 @@
 package org.example
 
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.withLock
+
 private typealias TransactionLog = MutableList<RevertAction>
 
 private sealed interface RevertAction {
@@ -13,13 +16,17 @@ class Storage {
 
     private val transactionLogs = mutableListOf<TransactionLog>()
 
-    fun count(value: String): Int = data.count(value)
+    private val lock = ReentrantReadWriteLock()
 
-    operator fun get(key: String): String? {
+    fun count(value: String): Int = lock.readLock().withLock {
+        data.count(value)
+    }
+
+    operator fun get(key: String): String? = lock.readLock().withLock {
         return data[key]
     }
 
-    operator fun set(key: String, value: String): String? {
+    operator fun set(key: String, value: String): String? = lock.writeLock().withLock {
         val oldValue = data[key]
 
         transactionLogs.lastOrNull()?.let { transactionLog ->
@@ -30,7 +37,7 @@ class Storage {
         return oldValue
     }
 
-    fun delete(key: String): String? {
+    fun delete(key: String): String? = lock.writeLock().withLock {
         val oldValue = data.remove(key)
 
         transactionLogs.lastOrNull()?.let { transactionLog ->
@@ -41,6 +48,7 @@ class Storage {
     }
 
     fun beginTransaction(): Int {
+        lock.writeLock().lock()
         transactionLogs += mutableListOf<RevertAction>()
         return transactionLogs.size
     }
@@ -50,9 +58,15 @@ class Storage {
             error("no transaction")
         }
 
-        transactionLogs.removeLast()
+        val transactionLog = transactionLogs.removeLast()
 
-        return transactionLogs.size
+        if (transactionLogs.isNotEmpty()) {
+            transactionLogs.last() += transactionLog
+        }
+
+        val size = transactionLogs.size
+        lock.writeLock().unlock()
+        return size
     }
 
     fun rollbackTransaction(): Int {
@@ -69,6 +83,8 @@ class Storage {
             }
         }
 
-        return transactionLogs.size
+        val size = transactionLogs.size
+        lock.writeLock().unlock()
+        return size
     }
 }

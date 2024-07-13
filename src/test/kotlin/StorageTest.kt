@@ -1,4 +1,5 @@
 import org.example.Storage
+import kotlin.concurrent.thread
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -169,5 +170,87 @@ class StorageTest {
 
         storage.rollbackTransaction()
         assertNull(storage["foo"])
+    }
+
+    @Test
+    fun threeNestedTransactions() {
+        storage["foo"] = "0"
+
+        storage.beginTransaction()
+        storage.beginTransaction()
+        storage.beginTransaction()
+
+        assertEquals("0", storage["foo"])
+
+        storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+        storage.commitTransaction()
+
+        assertEquals("1", storage["foo"])
+
+        storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+        assertEquals("2", storage["foo"])
+
+        storage.rollbackTransaction()
+        assertEquals("0", storage["foo"])
+
+        storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+
+        storage.commitTransaction()
+        assertEquals("1", storage["foo"])
+    }
+
+    @Test
+    fun multiThreadSet()  {
+        storage["foo"] = "0"
+
+        val numThreads = 10
+        val numIterations = 1000
+
+        val threads = List(numThreads) {
+            thread {
+                println("thread: ${Thread.currentThread().id}")
+
+                repeat(numIterations) {
+                    storage.beginTransaction()
+                    storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+                    storage.commitTransaction()
+                }
+            }
+        }
+
+        threads.forEach { it.join() }
+
+        assertEquals("${numThreads * numIterations}", storage["foo"])
+    }
+
+    @Test
+    fun multiThreadTransactions() {
+        storage["foo"] = "0"
+
+        val numThreads = 10
+        val numIterations = 1000
+
+        val threads = List(numThreads) {
+            thread {
+                repeat(numIterations) {
+                    storage.beginTransaction()
+                    storage.beginTransaction()
+                    storage.beginTransaction()
+
+                    storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+                    storage.commitTransaction()
+
+                    storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+                    storage.rollbackTransaction()
+
+                    storage["foo"] = "${storage["foo"]!!.toInt() + 1}"
+                    storage.commitTransaction()
+                }
+            }
+        }
+
+        threads.forEach { it.join() }
+
+        assertEquals("${numThreads * numIterations}", storage["foo"])
     }
 }
