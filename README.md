@@ -16,7 +16,7 @@ Type `HELP` to get a list of all supported commands.
 ./gradlew clean test
 ```
 
-## Run junit tests
+## Run e2e tests
 
 ```
 ./e2e-tests/run-tests.sh
