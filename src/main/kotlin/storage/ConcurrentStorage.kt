@@ -10,7 +10,7 @@ import kotlin.concurrent.withLock
  * So this is a trivial thread-safety solution created just for fun.
  *
  * It uses a [ReentrantReadWriteLock] to synchronize access to the underlying storage.
- * So works in JVM only.
+ * So this code works in JVM only.
  *
  * It's possible to build better thread-safe implementation where locking on read operations
  * could be avoided in most cases. But it would require more complex synchronization logic
@@ -24,21 +24,13 @@ private class ConcurrentStorage(private val storage: Storage) : Storage {
 
     private val lock = ReentrantReadWriteLock()
 
-    override fun count(value: String): Int = lock.readLock().withLock {
-        storage.count(value)
-    }
+    override fun count(value: String) = lock.readLock().withLock { storage.count(value) }
 
-    override fun get(key: String): String? = lock.readLock().withLock {
-        storage[key]
-    }
+    override fun get(key: String) = lock.readLock().withLock { storage[key] }
 
-    override fun set(key: String, value: String): String? = lock.writeLock().withLock {
-        storage.set(key, value)
-    }
+    override fun set(key: String, value: String) = lock.writeLock().withLock { storage.set(key, value) }
 
-    override fun delete(key: String): String? = lock.writeLock().withLock {
-        storage.delete(key)
-    }
+    override fun delete(key: String) = lock.writeLock().withLock { storage.delete(key) }
 
     override fun beginTransaction(): Int {
         lock.writeLock().lock()

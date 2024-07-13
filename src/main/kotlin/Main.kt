@@ -13,14 +13,14 @@ fun main() {
     while (command != Command.EXIT) {
         print("> ")
 
-        val params = readln().split(' ').filter { it.isNotBlank() }
+        val commandLine = readln().split(' ').filter { it.isNotBlank() }
 
-        if (params.isEmpty()) {
+        if (commandLine.isEmpty()) {
             continue
         }
 
         try {
-            command = Command.getInstance(params)
+            command = Command.getInstance(commandLine)
             val output = command.execute(storage)
             output?.let { println(it) }
         } catch (e: Exception) {
