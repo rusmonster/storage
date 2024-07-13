@@ -9,13 +9,11 @@ private sealed interface RevertAction {
 
 class Storage {
 
-    private val data = mutableMapOf<String, String>()
+    private val data = CountedMap<String, String>()
 
     private val transactionLogs = mutableListOf<TransactionLog>()
 
-    fun count(value: String): Int {
-        return data.values.count { it == value }
-    }
+    fun count(value: String): Int = data.count(value)
 
     operator fun get(key: String): String? {
         return data[key]
@@ -36,7 +34,7 @@ class Storage {
         val oldValue = data.remove(key)
 
         transactionLogs.lastOrNull()?.let { transactionLog ->
-            oldValue?.let { transactionLog += RevertAction.Set(key, oldValue) }
+            oldValue?.let { transactionLog += RevertAction.Set(key, it) }
         }
 
         return oldValue
