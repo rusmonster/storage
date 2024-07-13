@@ -1,115 +1,76 @@
 package org.example
 
-private class TransactionData{
-    val modified: Map<String, String>
-        field = mutableMapOf()
+private typealias TransactionLog = MutableList<RevertAction>
 
-    val removed: Set<String>
-        field = mutableSetOf()
-
-    fun isNotEmpty(): Boolean = modified.isNotEmpty() || removed.isNotEmpty()
-
-    fun set(key: String, value: String) {
-        modified[key] = value
-        removed -= key
-    }
-
-    fun delete(key: String) {
-        modified.remove(key)
-        removed += key
-    }
-
-    fun merge(other: TransactionData) {
-        modified += other.modified
-        removed -= other.modified.keys
-        removed += other.removed
-    }
+private sealed interface RevertAction {
+    class Set(val key: String, val value: String) : RevertAction
+    class Delete(val key: String) : RevertAction
 }
 
 class Storage {
 
-    // transactionStack[0] is the root transaction which is impossible to commit or rollback
-    private val transactionStack = mutableListOf(TransactionData())
+    private val data = mutableMapOf<String, String>()
 
-    // merged data from all transactions in the transactionStack
-    private val cache = mutableMapOf<String, String>()
-
-    private var isCacheValid = true
+    private val transactionLogs = mutableListOf<TransactionLog>()
 
     fun count(value: String): Int {
-        ensureCache()
-        return cache.values.count { it == value }
+        return data.values.count { it == value }
     }
 
     operator fun get(key: String): String? {
-        ensureCache()
-        return cache[key]
+        return data[key]
     }
 
-    operator fun set(key: String, value: String) {
-        isCacheValid = false
-        transactionStack.last().set(key, value)
+    operator fun set(key: String, value: String): String? {
+        val oldValue = data[key]
+
+        transactionLogs.lastOrNull()?.let { transactionLog ->
+            transactionLog += if (oldValue == null) RevertAction.Delete(key) else RevertAction.Set(key, oldValue)
+        }
+
+        data[key] = value
+        return oldValue
     }
 
     fun delete(key: String): String? {
-        val value = get(key)
+        val oldValue = data.remove(key)
 
-        if (value != null) {
-            transactionStack.last().delete(key)
-            isCacheValid = false
+        transactionLogs.lastOrNull()?.let { transactionLog ->
+            oldValue?.let { transactionLog += RevertAction.Set(key, oldValue) }
         }
 
-        return value
+        return oldValue
     }
 
     fun beginTransaction(): Int {
-        transactionStack += TransactionData()
-        return transactionStack.size - 1
+        transactionLogs += mutableListOf<RevertAction>()
+        return transactionLogs.size
     }
 
     fun commitTransaction(): Int {
-        if (transactionStack.size == 1) {
-            // Only root transaction in stack
+        if (transactionLogs.isEmpty()) {
             error("no transaction")
         }
 
-        val parent = transactionStack[transactionStack.size - 2]
-        val current = transactionStack[transactionStack.size - 1]
+        transactionLogs.removeLast()
 
-        parent.merge(current)
-
-        transactionStack.removeLast()
-
-        return transactionStack.size - 1
+        return transactionLogs.size
     }
 
     fun rollbackTransaction(): Int {
-        if (transactionStack.size == 1) {
-            // Only root transaction in stack
+        if (transactionLogs.isEmpty()) {
             error("no transaction")
         }
 
-        val transaction = transactionStack.removeLast()
+        val transactionLog = transactionLogs.removeLast()
 
-        if (transaction.isNotEmpty()) {
-            isCacheValid = false
+        for (i in transactionLog.lastIndex downTo 0) {
+            when (val action = transactionLog[i]) {
+                is RevertAction.Set -> data[action.key] = action.value
+                is RevertAction.Delete -> data.remove(action.key)
+            }
         }
 
-        return transactionStack.size - 1
-    }
-
-    private fun ensureCache() {
-        if (isCacheValid) {
-            return
-        }
-
-        cache.clear()
-
-        transactionStack.forEach { transaction ->
-            cache += transaction.modified
-            cache -= transaction.removed
-        }
-
-        isCacheValid = true
+        return transactionLogs.size
     }
 }
