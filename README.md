@@ -1,6 +1,6 @@
 # Storage
 
-An interactive interface to a transactional key value store.
+An interactive CLI to a transactional key value store.
 
 ## Run
 
