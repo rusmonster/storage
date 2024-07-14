@@ -9,8 +9,12 @@ import kotlin.concurrent.withLock
  * Thread safety was not in explicit requirements.
  * So this is a trivial thread-safety solution created just for fun.
  *
+ * All operations in one transaction from [ConcurrentStorage.beginTransaction] to
+ * [ConcurrentStorage.commitTransaction] or [ConcurrentStorage.rollbackTransaction]
+ * must be executed in the same thread.
+ *
  * It uses a [ReentrantReadWriteLock] to synchronize access to the underlying storage.
- * So this code works in JVM only.
+ * So this code works on the JVM only.
  *
  * It's possible to build better thread-safe implementation where locking on read operations
  * could be avoided in most cases. But it would require more complex synchronization logic
@@ -37,10 +41,12 @@ private class ConcurrentStorage(private val storage: Storage) : Storage {
         return storage.beginTransaction()
     }
 
+    /** @throws IllegalMonitorStateException if the transaction was started on different thread */
     override fun commitTransaction(): Int {
         return storage.commitTransaction().also { lock.writeLock().unlock() }
     }
 
+    /** @throws IllegalMonitorStateException if the transaction was started on different thread */
     override fun rollbackTransaction(): Int {
         return storage.rollbackTransaction().also { lock.writeLock().unlock() }
     }
