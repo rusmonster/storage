@@ -1,6 +1,19 @@
 # Storage
 
-An interactive CLI to a transactional key value store.
+An interactive CLI to a transactional key-value storage.
+
+The storage is able to store and retrieve key-value pairs.
+The storage supports nested transactions which can be started, committed or rolled back.
+
+The storage uses transaction logs to rollback transactions.
+
+Maximum transaction log capacity and maximum transaction depth are limited in order to avoid
+memory leaks and to prevent the storage from being overloaded.
+
+Use the `Storage.newStorage()` factory method to create a new instance of the storage.
+
+The storage is not thread-safe by default. To make it thread-safe,
+use the `Storage.synchronizedStorage()` method.
 
 ## Run
 
@@ -21,6 +34,8 @@ Type `HELP` to get a list of all supported commands.
 ```
 ./e2e-tests/run-tests.sh
 ```
+
+These e2e tests make the interface easily testable.
 
 Input data and expected output for e2e tests are located in `./e2e-tests/test-data`.
 For example for the `set-get` test the input file is located
