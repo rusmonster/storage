@@ -5,25 +5,22 @@ package org.example.storage
  * Implementation returned by this factory method is not thread-safe.
  *
  * Use the [synchronizedStorage] method to get a thread-safe instance of [Storage].
+ *
+ * Maximum transaction log capacity and maximum transaction depth are limited in order to avoid
+ * memory leaks and to prevent the storage from being overloaded.
+ *
+ * @param transactionLogCapacity The maximum number of actions that can be stored in the transaction log.
+ * @param maxTransactionsDepth The maximum depth of nested transactions.
  */
-fun Storage.Companion.newStorage(): Storage = StorageImpl()
-
-private typealias TransactionLog = MutableList<RevertAction>
-
-private sealed interface RevertAction {
-    data class Set(val key: String, val value: String) : RevertAction
-    data class Delete(val key: String) : RevertAction
+fun Storage.Companion.newStorage(transactionLogCapacity: Int = 10000, maxTransactionsDepth: Int = 1000): Storage {
+    return StorageImpl(transactionLogCapacity, maxTransactionsDepth)
 }
 
-private class StorageImpl : Storage {
+private class StorageImpl(transactionLogCapacity: Int, maxTransactionsDepth: Int) : Storage {
 
     private val data = CountedMap<String, String>()
 
-    /**
-     * Each entry in this list corresponds to a transaction log for a
-     * single transaction level within the nested transaction hierarchy.
-     */
-    private val transactionLogs = mutableListOf<TransactionLog>()
+    private val transactionLogManager = TransactionLogManager(transactionLogCapacity, maxTransactionsDepth)
 
     override fun count(value: String): Int = data.count(value)
 
@@ -32,61 +29,30 @@ private class StorageImpl : Storage {
     override operator fun set(key: String, value: String): String? {
         val oldValue = data[key]
 
-        transactionLogs.lastOrNull()?.let { transactionLog ->
-            transactionLog += if (oldValue == null) RevertAction.Delete(key) else RevertAction.Set(key, oldValue)
+        if (value != oldValue) { // to save transactionLogCapacity a little bit
+            transactionLogManager += if (oldValue == null) RevertAction.Delete(key) else RevertAction.Set(key, oldValue)
+            data[key] = value
         }
 
-        data[key] = value
         return oldValue
     }
 
     override fun delete(key: String): String? {
         val oldValue = data.remove(key)
 
-        transactionLogs.lastOrNull()?.let { transactionLog ->
-            oldValue?.let { transactionLog += RevertAction.Set(key, it) }
-        }
+        oldValue?.let { transactionLogManager += RevertAction.Set(key, it) }
 
         return oldValue
     }
 
-    override fun beginTransaction(): Int {
-        transactionLogs += mutableListOf<RevertAction>()
-        return transactionLogs.size
-    }
+    override fun beginTransaction() = transactionLogManager.handleTransactionStarted()
 
-    override fun commitTransaction(): Int {
-        if (transactionLogs.isEmpty()) {
-            error("no transaction")
+    override fun commitTransaction() = transactionLogManager.handleTransactionCommited()
+
+    override fun rollbackTransaction() = transactionLogManager.handleTransactionRollback { action ->
+        when (action) {
+            is RevertAction.Set -> data[action.key] = action.value
+            is RevertAction.Delete -> data.remove(action.key)
         }
-
-        val transactionLog = transactionLogs.removeLast()
-
-        if (transactionLogs.isNotEmpty()) {
-            // TODO:
-            // This has O(n) complexity, where n is the number of actions in the commited transaction log.
-            // It can be optimized to O(1) by implementing a custom TransactionLog
-            // based on a linked list.
-            transactionLogs.last() += transactionLog
-        }
-
-        return transactionLogs.size
-    }
-
-    override fun rollbackTransaction(): Int {
-        if (transactionLogs.isEmpty()) {
-            error("no transaction")
-        }
-
-        val transactionLog = transactionLogs.removeLast()
-
-        for (i in transactionLog.lastIndex downTo 0) {
-            when (val action = transactionLog[i]) {
-                is RevertAction.Set -> data[action.key] = action.value
-                is RevertAction.Delete -> data.remove(action.key)
-            }
-        }
-
-        return transactionLogs.size
     }
 }
