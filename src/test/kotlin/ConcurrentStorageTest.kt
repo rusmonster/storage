@@ -1,7 +1,6 @@
 import org.example.storage.Storage
 import org.example.storage.newStorage
 import org.example.storage.synchronizedStorage
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
 import kotlin.test.*
 
@@ -17,11 +16,11 @@ class ConcurrentStorageTest {
     @Test
     fun ensureBlockingRead() {
         storage["foo"] = "0"
-        val value = AtomicReference<String>()
+        var value: String? = null
         storage.beginTransaction()
 
         val thread = thread {
-            value.set(storage["foo"])
+            value = storage["foo"]
         }
 
         Thread.sleep(1000)
@@ -30,7 +29,7 @@ class ConcurrentStorageTest {
         storage.commitTransaction()
 
         thread.join()
-        assertEquals("1", value.get())
+        assertEquals("1", value)
     }
 
     @Test
@@ -88,14 +87,13 @@ class ConcurrentStorageTest {
 
     @Test
     fun closeTransactionOnDifferentThread() {
-        val throwable = AtomicReference<Throwable>()
+        var throwable: Throwable? = null
         storage.beginTransaction()
 
         val thread = thread {
-            val t = assertFails { storage.commitTransaction() }
-            throwable.set(t)
+            throwable = assertFails { storage.commitTransaction() }
         }
         thread.join()
-        assertNotNull(throwable.get())
+        assertTrue(throwable is IllegalMonitorStateException)
     }
 }
